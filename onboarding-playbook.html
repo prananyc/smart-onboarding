@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Smart Onboarding Playbook | Pranavi Jatoo</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#0b0f1a;color:#f1f5f9;font-family:'DM Sans',-apple-system,sans-serif;min-height:100vh;}
+    input,select,button{font-family:inherit;}
+
+    .header{padding:20px 28px;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .header-row{display:flex;align-items:center;gap:8px;}
+    .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,0.5);}
+    .header h1{font-size:20px;font-weight:800;letter-spacing:-0.02em;}
+    .header p{font-size:12px;color:#64748b;margin:3px 0 0 16px;}
+
+    .main{padding:24px 28px;max-width:1100px;margin:0 auto;}
+
+    .config{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;margin-bottom:24px;}
+    .config-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+    .config-sub{font-size:12px;color:#64748b;margin-bottom:20px;}
+    .config-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:end;}
+    .config-grid label{font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:500;}
+    .config-grid select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#f1f5f9;font-size:14px;outline:none;appearance:none;cursor:pointer;}
+    .btn-gen{padding:10px 24px;border-radius:8px;border:none;background:#6366f1;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;height:42px;}
+    .btn-gen:hover{background:#4f46e5;}
+
+    .results{display:none;}
+    .results.active{display:block;}
+
+    .summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+    .s-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 18px;}
+    .s-card-label{font-size:11px;font-weight:500;color:#94a3b8;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;}
+    .s-card-value{font-size:20px;font-weight:700;letter-spacing:-0.02em;}
+
+    .diff-banner{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:16px 20px;margin-bottom:24px;}
+    .diff-banner-title{font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;}
+    .diff-item{font-size:13px;color:#cbd5e1;line-height:1.7;padding-left:16px;position:relative;margin-bottom:4px;}
+    .diff-item::before{content:"⚠";position:absolute;left:0;font-size:11px;}
+
+    .section{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px;margin-bottom:20px;}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .section-title{font-size:16px;font-weight:700;}
+    .section-badge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:600;}
+
+    .checklist{list-style:none;}
+    .checklist li{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+    .checklist li:last-child{border-bottom:none;}
+    .check-box{width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,255,255,0.15);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all 0.2s;}
+    .check-box.checked{background:#22c55e;border-color:#22c55e;}
+    .check-box.checked::after{content:"✓";color:#fff;font-size:12px;font-weight:700;}
+    .check-content{flex:1;}
+    .check-title{font-size:13px;color:#f1f5f9;font-weight:500;}
+    .check-detail{font-size:12px;color:#64748b;margin-top:2px;line-height:1.5;}
+    .check-meta{display:flex;gap:8px;margin-top:4px;}
+    .check-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;}
+    .tag-time{background:rgba(6,182,212,0.12);color:#06b6d4;}
+    .tag-required{background:rgba(239,68,68,0.12);color:#ef4444;}
+    .tag-recommended{background:rgba(99,102,241,0.12);color:#a5b4fc;}
+    .tag-diff{background:rgba(245,158,11,0.12);color:#f59e0b;}
+
+    .progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;margin-bottom:24px;}
+    .progress-fill{height:100%;background:#22c55e;border-radius:4px;transition:width 0.3s;}
+
+    .progress-label{font-size:12px;color:#94a3b8;margin-bottom:6px;display:flex;justify-content:space-between;}
+
+    .btn-print{padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;}
+    .btn-print:hover{background:rgba(255,255,255,0.08);color:#f1f5f9;}
+
+    .footer{padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;}
+    .footer span{font-size:11px;color:#334155;}
+
+    .empty{text-align:center;padding:60px 20px;color:#475569;font-size:14px;}
+
+    @media print{
+      body{background:#fff;color:#000;}
+      .config,.btn-print,.footer,.header{display:none;}
+      .s-card{border:1px solid #ddd;}
+      .section{border:1px solid #ddd;}
+      .diff-banner{border:1px solid #f59e0b;}
+    }
+    @media(max-width:768px){
+      .config-grid{grid-template-columns:1fr;}
+      .summary-cards{grid-template-columns:repeat(2,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row"><div class="dot"></div><h1>Smart Onboarding Playbook</h1></div>
+  <p>Property Management · Location-aware onboarding workflows with compliance requirements</p>
+</div>
+
+<div class="main">
+  <div class="config">
+    <div class="config-title">Configure Onboarding</div>
+    <div class="config-sub">Select role type and target state to generate a tailored onboarding checklist</div>
+    <div class="config-grid">
+      <div>
+        <label>Role Type</label>
+        <select id="selRole">
+          <option value="">Select role...</option>
+          <option value="sales_agent">Sales Agent / Leasing Rep</option>
+          <option value="vendor">Vendor / Contractor</option>
+          <option value="channel_partner">Channel Partner / Broker</option>
+        </select>
+      </div>
+      <div>
+        <label>Target State</label>
+        <select id="selState">
+          <option value="">Select state...</option>
+          <option value="PA">Pennsylvania (Baseline)</option>
+          <option value="FL">Florida</option>
+          <option value="TX">Texas</option>
+          <option value="CA">California</option>
+          <option value="NY">New York</option>
+          <option value="IL">Illinois</option>
+        </select>
+      </div>
+      <div>
+        <label>Property Type</label>
+        <select id="selProp">
+          <option value="residential">Residential</option>
+          <option value="commercial">Commercial</option>
+          <option value="mixed">Mixed-Use</option>
+        </select>
+      </div>
+      <button class="btn-gen" id="genBtn">Generate Playbook</button>
+    </div>
+  </div>
+
+  <div class="empty" id="emptyState">
+    <div style="font-size:32px;margin-bottom:12px;">📋</div>
+    <div>Select a role, state, and property type above to generate your tailored onboarding playbook</div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="progress-label"><span id="progLabel">0 of 0 complete</span><span id="progPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+    <div class="summary-cards" id="summaryCards"></div>
+    <div id="diffBanner"></div>
+    <div id="sections"></div>
+
+    <div style="text-align:right;margin-top:8px;">
+      <button class="btn-print" onclick="window.print()">🖨 Print / Export</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Built by Pranavi Jatoo · Portfolio Project</span>
+  <span>Location-Aware Onboarding · SOP Automation · Compliance Workflows</span>
+</div>
+
+<script>
+// ============================================================
+// ONBOARDING DATA
+// ============================================================
+var DATA = {
+  sales_agent: {
+    label: "Sales Agent / Leasing Rep",
+    states: {
+      PA: {
+        license: "PA Real Estate Salesperson License required (Act 929). Must complete 75-hour pre-licensing course and pass PSI exam.",
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 75-hour PA pre-licensing course",detail:"Approved providers: CE Shop, Kaplan, Polley Associates",time:"2-4 weeks",req:true},
+            {title:"Pass PSI PA Real Estate Exam",detail:"Score 75% on national + state portions. $49 exam fee.",time:"1 day",req:true},
+            {title:"Submit license application to PA DOS",detail:"Include background check ($22), exam results, sponsoring broker info.",time:"1-2 weeks",req:true},
+            {title:"Complete anti-discrimination training",detail:"PA Human Relations Act and Fair Housing Act training.",time:"2 hours",req:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign independent contractor / employment agreement",detail:"Include commission structure, territory assignment, non-compete terms.",time:"1 day",req:true},
+            {title:"Set up AppFolio agent account",detail:"Configure listing access, lead routing, showing scheduler.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review property portfolio & pricing guides",detail:"Current listings, rent ranges, concessions, market comps.",time:"3 hours",req:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn showing protocol, objection handling, application process.",time:"1 week",req:true},
+            {title:"Complete lease agreement training",detail:"PA-specific lease clauses, security deposit rules (2-month max first year, 1-month after).",time:"3 hours",req:true},
+            {title:"Learn local market: Philadelphia neighborhoods",detail:"Pricing by neighborhood, transit access, school districts, demographic trends.",time:"4 hours",rec:true},
+            {title:"Practice lead qualification scripts",detail:"Phone, email, and in-person scripts with role-play exercises.",time:"2 hours",rec:true}
+          ]}
+        ]
+      },
+      FL: {
+        license: "FL Real Estate Sales Associate License required (Chapter 475). Must complete 63-hour pre-licensing course and pass Pearson VUE exam.",
+        diffs: [
+          "FL requires a 63-hour pre-licensing course (vs 75 hrs in PA) but exam pass rate is lower (~50%)",
+          "FL has no state income tax — affects commission structure and contractor agreements",
+          "FL requires post-licensing: 45 hrs within first renewal period (PA requires 14 hrs CE every 2 years)",
+          "FL security deposit rules differ: no cap on amount, but must be held in FL banking institution",
+          "FL has mandatory hurricane/flood disclosure requirements not applicable in PA",
+          "FL Community Development Districts (CDD) fees must be disclosed — unique to FL"
+        ],
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 63-hour FL pre-licensing course",detail:"FREC-approved. Providers: Gold Coast, Larson, CE Shop.",time:"2-3 weeks",req:true,diff:true},
+            {title:"Pass Pearson VUE FL Real Estate Exam",detail:"Score 75% on both portions. $36.75 exam fee. Lower pass rate than PA (~50%).",time:"1 day",req:true,diff:true},
+            {title:"Submit application to FL DBPR",detail:"Electronic fingerprinting required ($54.75). Background check included.",time:"2-3 weeks",req:true},
+            {title:"Complete Fair Housing + FL-specific discrimination training",detail:"Includes FL Human Rights Act provisions.",time:"3 hours",req:true},
+            {title:"Complete hurricane/flood disclosure certification",detail:"Required for all FL property transactions. Covers FEMA zones, insurance requirements.",time:"2 hours",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign contractor agreement (FL-specific)",detail:"Must reflect FL no-income-tax structure. Update commission splits accordingly.",time:"1 day",req:true,diff:true},
+            {title:"Set up AppFolio agent account",detail:"Configure FL property listings, lead routing, showing scheduler.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review FL property portfolio & pricing guides",detail:"Current listings, HOA/CDD fee structures, rent ranges, market comps.",time:"3 hours",req:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn FL-specific showing protocol, HOA application process.",time:"1 week",req:true},
+            {title:"Complete FL lease agreement training",detail:"FL-specific clauses: radon disclosure, CDD disclosure, security deposit rules (no cap, FL bank required).",time:"4 hours",req:true,diff:true},
+            {title:"Learn local market: target FL metro area",detail:"Pricing by neighborhood, seasonal demand patterns, snowbird vs year-round demographics.",time:"4 hours",rec:true},
+            {title:"Complete 45-hour post-licensing course",detail:"Required before first license renewal. Plan ahead.",time:"4-6 weeks",req:true,diff:true},
+            {title:"Insurance product knowledge training",detail:"FL flood insurance, windstorm coverage, Citizens Insurance — tenants will ask.",time:"2 hours",rec:true,diff:true}
+          ]}
+        ]
+      },
+      TX: {
+        license: "TX Real Estate Sales Agent License required (TREC). Must complete 180 hours of pre-licensing courses (6 courses × 30 hrs each).",
+        diffs: [
+          "TX requires 180 hours of pre-licensing education (vs 75 hrs in PA) — significantly more",
+          "TX has no state income tax — affects commission structure similarly to FL",
+          "TX requires sponsorship by a licensed broker before taking the exam",
+          "TX has mandatory seller's disclosure (Property Condition Disclosure) with specific flooding history",
+          "TX property tax rates are among the highest in the US — agents must understand tax implications",
+          "TX has unique homestead exemption rules that affect property marketing"
+        ],
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 180-hour TREC pre-licensing program",detail:"6 courses × 30 hrs: Principles I & II, Law of Agency, Law of Contracts, Promulgated Forms, Finance. Providers: Champions, AceableAgent.",time:"4-8 weeks",req:true,diff:true},
+            {title:"Get sponsored by licensed TX broker",detail:"Required BEFORE taking exam. Company must have TX brokerage license.",time:"1 week",req:true,diff:true},
+            {title:"Pass Pearson VUE TX Real Estate Exam",detail:"National + state portions. $54 exam fee.",time:"1 day",req:true},
+            {title:"Submit TREC license application",detail:"Background check, fingerprinting required. $205 application fee.",time:"2-4 weeks",req:true},
+            {title:"Complete TX Fair Housing training",detail:"TX Property Code + federal Fair Housing Act.",time:"2 hours",req:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign contractor agreement (TX-specific)",detail:"No state income tax structure. Include TX property tax education requirement.",time:"1 day",req:true,diff:true},
+            {title:"Set up AppFolio agent account",detail:"Configure TX property listings, lead routing.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review TX property portfolio & pricing",detail:"Current listings, property tax rates by county, HOA structures.",time:"3 hours",req:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn TX-specific protocol, property condition disclosures.",time:"1 week",req:true},
+            {title:"Complete TX lease agreement training",detail:"TX Property Code requirements, security deposit rules (no statutory cap, 30-day return).",time:"4 hours",req:true,diff:true},
+            {title:"Property tax & homestead exemption training",detail:"TX has no income tax but high property taxes. Agents must explain to tenants/buyers.",time:"3 hours",req:true,diff:true},
+            {title:"Learn local market: target TX metro area",detail:"Dallas, Houston, Austin, San Antonio — pricing, growth corridors, employer anchors.",time:"4 hours",rec:true}
+          ]}
+        ]
+      },
+      CA: {
+        license: "CA Real Estate Salesperson License required (DRE). Must complete 135 hours of pre-licensing (3 courses × 45 hrs).",
+        diffs: [
+          "CA requires 135 pre-licensing hours (vs 75 in PA) across 3 statutory courses",
+          "CA has the most extensive tenant protection laws in the US (AB 1482 rent caps, just-cause eviction)",
+          "CA requires earthquake/natural hazard disclosure zone reporting",
+          "CA security deposit max: 1 month rent (was 2 months before AB 12, effective July 2024)",
+          "CA state income tax is highest in US — significantly impacts commission structures",
+          "CA requires mandatory sexual harassment prevention training for all agents"
+        ],
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 135-hour CA DRE pre-licensing program",detail:"3 required courses: Real Estate Principles, Real Estate Practice, one elective (45 hrs each). Providers: Allied, Kaplan.",time:"4-6 weeks",req:true,diff:true},
+            {title:"Pass CA DRE Salesperson Exam",detail:"eLicensing system. 150 questions, 3.25 hours. $60 exam fee. ~50% pass rate.",time:"1 day",req:true},
+            {title:"Submit DRE license application",detail:"Live Scan fingerprinting, background check. $245 application fee.",time:"4-6 weeks",req:true},
+            {title:"Complete sexual harassment prevention training",detail:"AB 1825/SB 1343 — mandatory for all CA real estate professionals. 2 hours.",time:"2 hours",req:true,diff:true},
+            {title:"Complete natural hazard disclosure training",detail:"Earthquake zones, fire severity zones, flood zones — all must be disclosed in CA.",time:"3 hours",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign contractor agreement (CA-specific)",detail:"Must comply with AB 5 worker classification rules. CA has strict independent contractor tests.",time:"1 day",req:true,diff:true},
+            {title:"Set up AppFolio agent account",detail:"Configure CA property listings with rent cap compliance flags.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review CA property portfolio & pricing",detail:"Current listings, AB 1482 rent cap calculations, local rent control ordinances.",time:"4 hours",req:true,diff:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn CA disclosure requirements, tenant screening rules (source of income protection).",time:"1 week",req:true},
+            {title:"Complete CA lease agreement training",detail:"AB 1482 rent caps, just-cause eviction, security deposit max (1 month), 21-day return rule.",time:"5 hours",req:true,diff:true},
+            {title:"Tenant protection law deep dive",detail:"CA has strongest tenant protections in US. Must know: rent caps, relocation assistance, just-cause requirements.",time:"4 hours",req:true,diff:true},
+            {title:"Learn local market: target CA metro",detail:"LA, SF, San Diego, Sacramento — micro-market pricing, rent control overlay zones.",time:"4 hours",rec:true}
+          ]}
+        ]
+      },
+      NY: {
+        license: "NY Real Estate Salesperson License required (DOS). Must complete 77-hour pre-licensing course.",
+        diffs: [
+          "NY requires 77-hour pre-licensing (very close to PA's 75 hrs)",
+          "NYC has unique rent stabilization laws not found anywhere else in the US",
+          "NY requires broker fee disclosure and recently changed rules on who pays broker fees",
+          "NY has mandatory lead paint disclosure training for pre-1978 buildings (stricter enforcement than PA)",
+          "NY state + NYC combined income tax is among highest in US — commission structure impact",
+          "NYC requires specific license for managing rent-stabilized units"
+        ],
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 77-hour NY pre-licensing course",detail:"NY DOS approved providers: NYREI, Kaplan, CE Shop.",time:"2-4 weeks",req:true},
+            {title:"Pass NY DOS Real Estate Exam",detail:"Proctored exam. $15 exam fee. Must score 70%.",time:"1 day",req:true},
+            {title:"Submit license application to NY DOS",detail:"$55 application fee. Sponsoring broker required.",time:"2-3 weeks",req:true},
+            {title:"Complete Fair Housing + NY Human Rights Law training",detail:"NY has broader protected classes than federal law.",time:"3 hours",req:true,diff:true},
+            {title:"Complete lead paint disclosure training",detail:"Mandatory for properties built before 1978. NYC Local Law 1 strict enforcement.",time:"2 hours",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign contractor agreement (NY-specific)",detail:"Must comply with NY labor law. NYC broker fee rules recently changed.",time:"1 day",req:true,diff:true},
+            {title:"Set up AppFolio agent account",detail:"Configure NY property listings with rent stabilization flags where applicable.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review NY property portfolio & pricing",detail:"Current listings, rent stabilization status, neighborhood guides.",time:"3 hours",req:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn NY-specific protocol, rent stabilization unit identification.",time:"1 week",req:true},
+            {title:"Complete NY lease agreement training",detail:"NY-specific clauses, security deposit rules (1 month max, must use interest-bearing account), rent stabilization requirements.",time:"5 hours",req:true,diff:true},
+            {title:"Rent stabilization deep dive",detail:"If managing NYC units: DHCR registration, MBR/MCI increases, preferential rent rules.",time:"4 hours",req:true,diff:true},
+            {title:"Learn local market: target NY metro",detail:"NYC boroughs, Westchester, Long Island — pricing, commute patterns, demographic trends.",time:"4 hours",rec:true}
+          ]}
+        ]
+      },
+      IL: {
+        license: "IL Real Estate Broker License required (IDFPR). Note: IL eliminated 'salesperson' — all licensees are 'brokers'. Must complete 90 pre-licensing hours.",
+        diffs: [
+          "IL has no 'salesperson' license — everyone is a 'broker' (different terminology than PA)",
+          "IL requires 90 pre-licensing hours (vs 75 in PA) plus 30-hour post-license course within first year",
+          "Chicago has its own Residential Landlord Tenant Ordinance (RLTO) — stricter than state law",
+          "IL security deposit: Chicago requires 2 separate disclosures + interest paid annually",
+          "Chicago requires RLTO summary attached to every lease — unique to Chicago",
+          "IL has specific radon disclosure requirements"
+        ],
+        steps: [
+          {cat:"Licensing & Compliance",items:[
+            {title:"Complete 90-hour IL pre-licensing course",detail:"IL calls all licensees 'brokers'. Providers: Illinois REALTORS, CE Shop, Kaplan.",time:"3-5 weeks",req:true,diff:true},
+            {title:"Pass PSI IL Broker Exam",detail:"National + state portions. Must score 75%. $55 exam fee.",time:"1 day",req:true},
+            {title:"Submit application to IDFPR",detail:"Fingerprinting, background check. $125 fee. Sponsoring broker required.",time:"2-4 weeks",req:true},
+            {title:"Complete Fair Housing training (IL-specific)",detail:"IL Human Rights Act — additional protected classes beyond federal.",time:"3 hours",req:true},
+            {title:"Complete radon disclosure training",detail:"IL Radon Awareness Act — mandatory disclosure for all residential properties.",time:"1 hour",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign contractor agreement (IL-specific)",detail:"Reflect 'broker' terminology. Include Chicago RLTO compliance if applicable.",time:"1 day",req:true,diff:true},
+            {title:"Set up AppFolio agent account",detail:"Configure IL property listings.",time:"2 hours",req:true},
+            {title:"Complete CRM training (HubSpot)",detail:"Lead management, pipeline tracking, follow-up sequences.",time:"4 hours",req:true},
+            {title:"Review IL property portfolio & pricing",detail:"Current listings, Chicago RLTO status, suburban market comps.",time:"3 hours",req:true}
+          ]},
+          {cat:"Training & Ramp-Up",items:[
+            {title:"Shadow senior agent for 5 showings",detail:"Learn IL protocol, RLTO unit identification (Chicago).",time:"1 week",req:true},
+            {title:"Complete IL lease agreement training",detail:"Chicago RLTO requirements: security deposit interest, required summary attachment, 30-day itemized return.",time:"5 hours",req:true,diff:true},
+            {title:"Complete 30-hour post-license course",detail:"Required within 1st year of licensure. Must complete before first renewal.",time:"3-4 weeks",req:true,diff:true},
+            {title:"Learn local market: Chicago metro area",detail:"Neighborhoods, CTA access, property tax rates (among highest in US), seasonal patterns.",time:"4 hours",rec:true}
+          ]}
+        ]
+      }
+    }
+  },
+  vendor: {
+    label: "Vendor / Contractor",
+    states: {
+      PA: {
+        license: "PA Home Improvement Contractor Registration required (Act 132). General liability insurance mandatory.",
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify PA Home Improvement Contractor Registration",detail:"Act 132 — required for all contractors doing $500+ work. Register with PA Attorney General.",time:"1-2 weeks",req:true},
+            {title:"Verify general liability insurance ($1M minimum)",detail:"Certificate of Insurance (COI) naming property management company as additional insured.",time:"1 day",req:true},
+            {title:"Verify workers' compensation coverage",detail:"Required if contractor has employees. PA Bureau of Workers' Comp.",time:"1 day",req:true},
+            {title:"Complete W-9 and vendor registration form",detail:"Tax ID verification, payment terms, banking info for ACH.",time:"1 hour",req:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement",detail:"Scope of work, SLAs, insurance requirements, liability, indemnification, termination terms.",time:"1 day",req:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules, communication preferences.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"Key/lockbox procedures, tenant notification requirements, emergency access rules.",time:"1 hour",req:true},
+            {title:"Submit rate card / pricing schedule",detail:"Hourly rates, flat fees by service type, emergency/after-hours rates.",time:"1 day",req:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation",detail:"OSHA basics, property-specific hazards, PPE requirements.",time:"2 hours",req:true},
+            {title:"Review quality standards & inspection process",detail:"Work inspection checklist, photo documentation requirements, warranty terms.",time:"1 hour",req:true},
+            {title:"EPA Lead-Safe certification (if applicable)",detail:"Required for work in pre-1978 buildings. EPA RRP Rule.",time:"1 day",rec:true},
+            {title:"Background check authorization",detail:"Required for vendors with tenant-occupied unit access.",time:"1 week",req:true}
+          ]}
+        ]
+      },
+      FL: {
+        license: "FL Contractor License required through DBPR (Construction Industry Licensing Board). Different tiers: Certified vs Registered.",
+        diffs: [
+          "FL requires state contractor licensing through DBPR (PA only requires registration, not licensing)",
+          "FL has tiered contractor licenses: Certified (statewide) vs Registered (county-level) — PA has no tiers",
+          "FL requires hurricane-rated materials and techniques for exterior work — not applicable in PA",
+          "FL has mandatory building permits for most work over $2,500 (lower threshold than PA)",
+          "FL lien law differs: contractor must serve 'Notice to Owner' within 45 days of starting work",
+          "FL requires separate plumbing, electrical, and HVAC licenses — PA requirements vary by municipality"
+        ],
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify FL DBPR Contractor License",detail:"Certified (statewide) or Registered (county). Must verify license type matches service area.",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify FL general liability insurance ($1M min)",detail:"COI must name property management company. FL requires contractor insurance minimums.",time:"1 day",req:true},
+            {title:"Verify workers' compensation (FL requirements)",detail:"FL requires WC for all construction employers with 1+ employee (stricter than PA).",time:"1 day",req:true,diff:true},
+            {title:"Complete W-9 and vendor registration",detail:"Tax ID verification, payment terms, banking info. No state income tax in FL.",time:"1 hour",req:true},
+            {title:"Verify specialty licenses (plumbing, electrical, HVAC)",detail:"FL requires separate state licenses for each trade — unlike PA where it's municipal.",time:"1-2 weeks",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement (FL-specific)",detail:"Include hurricane work provisions, FL lien law compliance, Notice to Owner requirements.",time:"1 day",req:true,diff:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"Key procedures, tenant notification. FL has specific landlord entry notice requirements (12 hrs).",time:"1 hour",req:true,diff:true},
+            {title:"Submit rate card with hurricane/emergency rates",detail:"Standard rates plus emergency response rates for storm damage.",time:"1 day",req:true,diff:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation (FL-specific)",detail:"OSHA basics plus FL-specific: heat illness prevention, hurricane preparedness protocols.",time:"3 hours",req:true,diff:true},
+            {title:"Hurricane-rated materials certification",detail:"Exterior work must use FL Building Code approved materials. Miami-Dade NOA if in South FL.",time:"1 day",req:true,diff:true},
+            {title:"Review FL building permit requirements",detail:"Most work over $2,500 requires permit. Lower threshold than PA.",time:"1 hour",req:true,diff:true},
+            {title:"Background check authorization",detail:"Required for tenant-occupied unit access.",time:"1 week",req:true}
+          ]}
+        ]
+      },
+      TX: {
+        license: "TX does not have a general contractor license at state level. Licensing is municipal. Specialty trades (electrical, plumbing, HVAC) require TDLR licenses.",
+        diffs: [
+          "TX has NO state-level general contractor license (PA requires registration) — licensing is city/county level",
+          "TX requires TDLR licenses for electrical, plumbing, and HVAC specifically",
+          "TX has minimal building permit requirements in unincorporated areas (much less regulated than PA)",
+          "TX property liens: different mechanics lien process — must file affidavit with county clerk",
+          "TX extreme heat protocols required — OSHA heat illness prevention more critical than PA",
+          "No state income tax — simpler vendor payment structure"
+        ],
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify municipal contractor registration",detail:"TX has no state general license. Check city requirements (e.g., Dallas, Houston have local registration).",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify TDLR specialty licenses if applicable",detail:"Electrical, plumbing, HVAC require TX Dept of Licensing & Regulation licenses.",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify general liability insurance ($1M min)",detail:"COI naming property management company as additional insured.",time:"1 day",req:true},
+            {title:"Verify workers' compensation",detail:"TX does NOT require WC (one of few states). Strongly recommended. Verify coverage status.",time:"1 day",req:true,diff:true},
+            {title:"Complete W-9 and vendor registration",detail:"No state income tax. Simplified 1099 reporting.",time:"1 hour",req:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement (TX-specific)",detail:"Include TX mechanics lien provisions, municipal permit responsibilities.",time:"1 day",req:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"TX landlord entry notice varies by lease terms (no statutory minimum).",time:"1 hour",req:true,diff:true},
+            {title:"Submit rate card",detail:"Standard rates plus emergency rates.",time:"1 day",req:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation (TX-specific)",detail:"OSHA basics plus TX heat illness prevention — critical in summer months.",time:"3 hours",req:true,diff:true},
+            {title:"Review TX building permit landscape",detail:"Varies dramatically by municipality. Unincorporated areas may have no permit requirements.",time:"1 hour",req:true,diff:true},
+            {title:"Quality standards & inspection process",detail:"Work inspection checklist, photo documentation, warranty terms.",time:"1 hour",req:true},
+            {title:"Background check authorization",detail:"Required for tenant-occupied unit access.",time:"1 week",req:true}
+          ]}
+        ]
+      },
+      CA: {
+        license: "CA Contractor State License Board (CSLB) license required for any work over $500. Strictest contractor licensing in the US.",
+        diffs: [
+          "CA requires CSLB license for ALL work over $500 — strictest in the US (PA only requires registration)",
+          "CA has 43 different contractor license classifications — must verify correct classification",
+          "CA requires contractor bonds ($25,000 general) in addition to insurance",
+          "CA has mandatory 10-day preliminary notice for lien rights",
+          "CA workers' comp is mandatory with no exceptions (PA has some exemptions)",
+          "CA AB 5 worker classification rules are strictest in US — impacts independent contractor status"
+        ],
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify CSLB contractor license",detail:"Required for any work over $500. 43 classifications — verify correct class for scope.",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify contractor bond ($25,000 minimum)",detail:"CA requires surety bond in addition to insurance. Not required in PA.",time:"1 day",req:true,diff:true},
+            {title:"Verify general liability insurance ($1M min)",detail:"COI naming property management company. CA may require higher minimums.",time:"1 day",req:true},
+            {title:"Verify workers' compensation (mandatory in CA)",detail:"No exceptions in CA. Must provide WC certificate before any work begins.",time:"1 day",req:true,diff:true},
+            {title:"Complete W-9 and vendor registration",detail:"CA has highest state income tax — impacts vendor payment structures.",time:"1 hour",req:true},
+            {title:"Verify AB 5 independent contractor compliance",detail:"CA's strict worker classification test. Must meet all 3 prongs of ABC test.",time:"1 day",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement (CA-specific)",detail:"Include CSLB provisions, preliminary notice requirements, AB 5 compliance.",time:"1 day",req:true,diff:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"CA requires 24-hour written notice for landlord/contractor entry (stricter than PA).",time:"1 hour",req:true,diff:true},
+            {title:"Submit rate card",detail:"Include prevailing wage rates if applicable to any public/subsidized housing.",time:"1 day",req:true,diff:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation (CA-specific)",detail:"Cal/OSHA (stricter than federal OSHA), heat illness prevention, wildfire smoke protections.",time:"3 hours",req:true,diff:true},
+            {title:"Review CA building permit requirements",detail:"Permits required for most work. Local jurisdictions may have additional requirements.",time:"1 hour",req:true},
+            {title:"Environmental compliance training",detail:"CA-specific: asbestos, lead paint (stricter than EPA), VOC limits on materials.",time:"2 hours",req:true,diff:true},
+            {title:"Background check authorization",detail:"Required for tenant-occupied unit access. CA has restrictions on using criminal history.",time:"1 week",req:true,diff:true}
+          ]}
+        ]
+      },
+      NY: {
+        license: "NY/NYC contractor licensing varies. NYC requires DOB-issued license. Upstate varies by municipality.",
+        diffs: [
+          "NYC requires Department of Buildings (DOB) license — one of few cities with mandatory contractor licensing",
+          "NYC has strict insurance minimums ($1M/$2M) higher than PA requirements",
+          "NYC requires Site Safety Training (SST) cards for certain work types",
+          "NY lien law: must file within 8 months of completion (different timeline than PA)",
+          "NYC has strict noise ordinance affecting work hours (after 7am, before 6pm)",
+          "NYC requires asbestos survey (ACP-5) before any renovation in pre-1978 buildings"
+        ],
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify NYC DOB contractor license (if NYC)",detail:"NYC Home Improvement Contractor (HIC) license required. Different from PA registration.",time:"2-4 weeks",req:true,diff:true},
+            {title:"Verify insurance ($1M/$2M for NYC)",detail:"NYC requires higher minimums. COI naming property management company.",time:"1 day",req:true,diff:true},
+            {title:"Verify workers' compensation",detail:"NY requires WC for all employers. NY has own state WC board.",time:"1 day",req:true},
+            {title:"Complete W-9 and vendor registration",detail:"NY state + NYC tax implications for vendor payments.",time:"1 hour",req:true},
+            {title:"Obtain Site Safety Training card (if applicable)",detail:"Required for certain NYC work types. 40-hour or 62-hour SST per DOB rules.",time:"1-2 weeks",req:true,diff:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement (NY-specific)",detail:"Include NYC DOB compliance, noise ordinance work hours, asbestos survey requirements.",time:"1 day",req:true,diff:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"NY requires reasonable notice for entry. Rent-stabilized units have additional rules.",time:"1 hour",req:true,diff:true},
+            {title:"Submit rate card",detail:"Include NYC prevailing wage rates if applicable.",time:"1 day",req:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation (NYC-specific)",detail:"OSHA + NYC-specific: DOB safety requirements, noise ordinance (7am-6pm), lead/asbestos protocols.",time:"3 hours",req:true,diff:true},
+            {title:"Asbestos survey requirements (pre-1978)",detail:"NYC requires ACP-5 form before any renovation in older buildings. Stricter than PA/EPA.",time:"1 day",req:true,diff:true},
+            {title:"Quality standards & inspection process",detail:"Work inspection checklist, photo documentation, warranty terms.",time:"1 hour",req:true},
+            {title:"Background check authorization",detail:"NY limits use of criminal history in hiring/contracting decisions (Fair Chance Act).",time:"1 week",req:true,diff:true}
+          ]}
+        ]
+      },
+      IL: {
+        license: "IL has no state general contractor license. Chicago requires registration. Roofing contractors need state license.",
+        diffs: [
+          "IL has no state general contractor license (similar to TX, different from PA which requires registration)",
+          "Chicago requires contractor registration with Dept of Buildings — suburbs may not",
+          "IL requires state license specifically for roofing contractors (unique requirement)",
+          "Chicago has strict permit requirements and inspection processes",
+          "IL mechanics lien: must serve 60-day notice for residential work",
+          "Chicago RLTO affects contractor access scheduling in tenant-occupied units"
+        ],
+        steps: [
+          {cat:"Registration & Compliance",items:[
+            {title:"Verify Chicago contractor registration (if Chicago)",detail:"Chicago Dept of Buildings registration required. Suburbs have varying requirements.",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify IL roofing license (if applicable)",detail:"IL uniquely requires state-level license for roofing contractors.",time:"1-2 weeks",req:true,diff:true},
+            {title:"Verify general liability insurance ($1M min)",detail:"COI naming property management company.",time:"1 day",req:true},
+            {title:"Verify workers' compensation",detail:"IL requires WC for all employers. IL Workers' Compensation Commission.",time:"1 day",req:true},
+            {title:"Complete W-9 and vendor registration",detail:"IL state income tax applies to vendor payments.",time:"1 hour",req:true}
+          ]},
+          {cat:"Company Onboarding",items:[
+            {title:"Sign master service agreement (IL-specific)",detail:"Include Chicago permit provisions, RLTO tenant notification if Chicago properties.",time:"1 day",req:true,diff:true},
+            {title:"Set up in AppFolio vendor portal",detail:"Configure work order routing, payment schedules.",time:"1 hour",req:true},
+            {title:"Review property access protocols",detail:"Chicago RLTO requires 2 days notice for non-emergency entry (stricter than PA).",time:"1 hour",req:true,diff:true},
+            {title:"Submit rate card",detail:"Standard and emergency rates.",time:"1 day",req:true}
+          ]},
+          {cat:"Safety & Standards",items:[
+            {title:"Complete safety orientation (IL-specific)",detail:"OSHA basics plus Chicago-specific: DOB safety requirements, permit processes.",time:"2 hours",req:true},
+            {title:"Review Chicago permit requirements",detail:"Chicago has strict permit and inspection requirements for most work.",time:"1 hour",req:true,diff:true},
+            {title:"Radon awareness",detail:"IL requires radon disclosure — contractors should understand radon mitigation basics.",time:"1 hour",rec:true,diff:true},
+            {title:"Background check authorization",detail:"IL has restrictions on criminal history use in contracting decisions.",time:"1 week",req:true}
+          ]}
+        ]
+      }
+    }
+  },
+  channel_partner: {
+    label: "Channel Partner / Broker",
+    states: {
+      PA: {
+        license: "PA Real Estate Broker License required (60 hrs broker education + 3 yrs salesperson experience). Referral agreement required.",
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active PA Broker License",detail:"Confirm through PA DOS PALS system. Must be active and in good standing.",time:"1 day",req:true},
+            {title:"Verify E&O insurance",detail:"Errors & Omissions coverage. Minimum $500K recommended.",time:"1 day",req:true},
+            {title:"Verify brokerage entity registration",detail:"Company must be registered with PA DOS as a licensed brokerage.",time:"1 day",req:true},
+            {title:"Complete anti-money laundering (AML) verification",detail:"FinCEN requirements for real estate transactions. Know Your Partner.",time:"1 day",req:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral / co-brokerage agreement",detail:"Commission splits, referral fees, territory definitions, exclusivity terms.",time:"1-2 days",req:true},
+            {title:"Define territory and property type scope",detail:"Geographic boundaries, property types (residential/commercial/mixed), deal size thresholds.",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access level, listing data, lead sharing protocols, reporting dashboards.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline reviews, monthly performance reviews, QBR schedule.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"Co-branded materials, approved messaging, social media guidelines.",time:"3 hours",req:true},
+            {title:"Portfolio deep dive",detail:"All managed properties, pricing, availability, unique selling points, tenant demographics.",time:"4 hours",req:true},
+            {title:"Lead handoff process training",detail:"Lead qualification criteria, CRM handoff process, SLA for follow-up (< 4 hrs).",time:"2 hours",req:true},
+            {title:"Review compliance and fair housing",detail:"Ensure partner team is aligned on fair housing practices and company policies.",time:"2 hours",req:true}
+          ]}
+        ]
+      },
+      FL: {
+        license: "FL Real Estate Broker License (FREC) required. 72 hrs broker pre-licensing + 24 months active salesperson experience.",
+        diffs: [
+          "FL broker requirements differ: 72 hrs pre-licensing (vs 60 in PA) + 24 months active experience",
+          "FL requires separate broker entity registration with DBPR for each office location",
+          "FL referral fees: must be paid to licensed entity only (stricter enforcement than PA)",
+          "FL no state income tax impacts commission/referral fee structures",
+          "FL has mandatory escrow deposit requirements for broker-held funds",
+          "FL continuing education: 60 hrs per renewal cycle (vs 30 hrs in PA)"
+        ],
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active FL Broker License (DBPR)",detail:"Confirm through DBPR MyFloridaLicense system. Check license type and status.",time:"1 day",req:true,diff:true},
+            {title:"Verify FL brokerage entity registration",detail:"FL requires separate registration per office location — verify all locations.",time:"1 day",req:true,diff:true},
+            {title:"Verify E&O insurance",detail:"Errors & Omissions coverage minimum $500K.",time:"1 day",req:true},
+            {title:"Verify escrow account compliance",detail:"FL requires brokers to maintain escrow accounts for deposits. Must be FL bank.",time:"1 day",req:true,diff:true},
+            {title:"Complete AML verification",detail:"FinCEN requirements. FL has additional geographic targeting orders for certain counties.",time:"1 day",req:true,diff:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral agreement (FL-specific)",detail:"Referral fees must go to licensed entity. Include FL-specific commission rules.",time:"1-2 days",req:true,diff:true},
+            {title:"Define territory and property type scope",detail:"FL market areas, property types, seasonal considerations (snowbird season).",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access, listing data, lead sharing, FL-specific reporting.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline, monthly reviews. Account for seasonal volume shifts.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"Co-branded materials adapted for FL market.",time:"3 hours",req:true},
+            {title:"FL portfolio deep dive",detail:"FL properties, HOA/CDD fees, hurricane prep info, seasonal pricing strategies.",time:"4 hours",req:true,diff:true},
+            {title:"Lead handoff process training",detail:"Qualification criteria, CRM process, SLA for follow-up.",time:"2 hours",req:true},
+            {title:"FL compliance and Fair Housing",detail:"FL Human Rights Act + federal. FL-specific advertising rules for vacation/seasonal rentals.",time:"3 hours",req:true,diff:true}
+          ]}
+        ]
+      },
+      TX: {
+        license: "TX Real Estate Broker License (TREC) required. 900 hours of qualifying education + 4 years active experience.",
+        diffs: [
+          "TX broker requires 900 hours education (vs 60 in PA) — dramatically more",
+          "TX requires 4 years active experience (vs 3 in PA)",
+          "TX has unique 'intermediary' status for dual representation (different from PA dual agency)",
+          "TX no state income tax — simpler referral fee structure",
+          "TX requires broker to maintain trust account with specific TREC rules",
+          "TX requires sponsoring broker to review all contracts — more oversight than PA"
+        ],
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active TX Broker License (TREC)",detail:"Confirm through TREC online lookup. TX broker education is 900 hrs — verify completion.",time:"1 day",req:true,diff:true},
+            {title:"Verify TX brokerage entity registration with TREC",detail:"Entity must be registered. Designated broker must be identified.",time:"1 day",req:true},
+            {title:"Verify E&O insurance",detail:"Errors & Omissions coverage.",time:"1 day",req:true},
+            {title:"Verify trust account compliance",detail:"TREC has specific trust account rules — different from PA escrow requirements.",time:"1 day",req:true,diff:true},
+            {title:"Complete AML verification",detail:"FinCEN requirements for TX real estate transactions.",time:"1 day",req:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral agreement (TX-specific)",detail:"Include intermediary disclosure provisions, TREC-required language.",time:"1-2 days",req:true,diff:true},
+            {title:"Define territory and property type scope",detail:"TX metro areas, property types, growth corridor targeting.",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access, listing data, lead sharing protocols.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline, monthly reviews, QBR schedule.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"Co-branded materials for TX market.",time:"3 hours",req:true},
+            {title:"TX portfolio deep dive",detail:"TX properties, property tax implications, homestead exemptions, growth market data.",time:"4 hours",req:true,diff:true},
+            {title:"Lead handoff process training",detail:"Qualification criteria, CRM process, SLA for follow-up.",time:"2 hours",req:true},
+            {title:"TX compliance training",detail:"TREC rules, intermediary status, mandatory contract review by sponsoring broker.",time:"3 hours",req:true,diff:true}
+          ]}
+        ]
+      },
+      CA: {
+        license: "CA Real Estate Broker License (DRE) required. 360 hours education (8 courses) + 2 years salesperson experience.",
+        diffs: [
+          "CA broker requires 360 hours (vs 60 in PA) — 8 statutory courses",
+          "CA has the strictest advertising regulations for real estate in the US",
+          "CA AB 1482 rent cap compliance affects how partners market rental properties",
+          "CA has mandatory agency disclosure at first substantive contact (stricter than PA)",
+          "CA state income tax highest in US — significantly impacts referral fee structures",
+          "CA source of income discrimination protections — can't refuse Section 8 vouchers"
+        ],
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active CA Broker License (DRE)",detail:"DRE Public License Lookup. CA requires 360 hrs education — verify.",time:"1 day",req:true,diff:true},
+            {title:"Verify CA brokerage entity DRE registration",detail:"Corporation/LLC must have separate DRE broker-officer.",time:"1 day",req:true},
+            {title:"Verify E&O insurance",detail:"CA may require higher minimums depending on transaction volume.",time:"1 day",req:true},
+            {title:"Verify trust account (DRE rules)",detail:"CA DRE has specific trust fund handling requirements — audit trail mandatory.",time:"1 day",req:true,diff:true},
+            {title:"AB 5 worker classification review",detail:"Ensure partner relationship structure complies with CA's strict ABC test.",time:"1 day",req:true,diff:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral agreement (CA-specific)",detail:"Include agency disclosure requirements, AB 1482 compliance, source of income provisions.",time:"1-2 days",req:true,diff:true},
+            {title:"Define territory and property type scope",detail:"CA metros, rent control overlay zones, property types.",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access, listing data with rent cap flags, lead sharing.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline, monthly reviews, QBR.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"CA has strict real estate advertising regulations — all materials need compliance review.",time:"4 hours",req:true,diff:true},
+            {title:"CA portfolio deep dive",detail:"Properties, AB 1482 rent cap status, local rent control, source of income rules.",time:"5 hours",req:true,diff:true},
+            {title:"Lead handoff process training",detail:"Qualification criteria, CRM process, mandatory agency disclosure timing.",time:"2 hours",req:true,diff:true},
+            {title:"CA compliance deep dive",detail:"DRE rules, agency disclosure, fair housing (broader than federal), advertising regs.",time:"4 hours",req:true,diff:true}
+          ]}
+        ]
+      },
+      NY: {
+        license: "NY Real Estate Broker License (DOS) required. 152 hours education + 2 years salesperson experience.",
+        diffs: [
+          "NY broker requires 152 hours education (vs 60 in PA)",
+          "NYC recently changed broker fee rules — affects referral agreements",
+          "NYC rent stabilization requires specific knowledge for partner teams",
+          "NY has mandatory agency disclosure form (different format than PA)",
+          "NY state + NYC income tax significantly impacts referral structures",
+          "NYC has unique Good Cause Eviction law affecting rental marketing"
+        ],
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active NY Broker License (DOS)",detail:"NY DOS eAccessNY lookup. 152 hrs education requirement.",time:"1 day",req:true,diff:true},
+            {title:"Verify NY brokerage entity registration",detail:"DOS requires brokerage registration. NYC may have additional requirements.",time:"1 day",req:true},
+            {title:"Verify E&O insurance",detail:"Errors & Omissions coverage.",time:"1 day",req:true},
+            {title:"Complete AML verification",detail:"FinCEN requirements. NYC has geographic targeting orders for certain transactions.",time:"1 day",req:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral agreement (NY-specific)",detail:"Include NYC broker fee rule compliance, rent stabilization provisions.",time:"1-2 days",req:true,diff:true},
+            {title:"Define territory and property type scope",detail:"NYC boroughs, suburban NY, property types, rent stabilization status.",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access, listing data with rent stabilization flags.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline, monthly reviews, QBR.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"NYC market-specific materials, broker fee disclosure requirements.",time:"3 hours",req:true,diff:true},
+            {title:"NY portfolio deep dive",detail:"NYC properties, rent stabilization status, Good Cause Eviction implications.",time:"5 hours",req:true,diff:true},
+            {title:"Lead handoff process training",detail:"Qualification criteria, CRM process, NY agency disclosure timing.",time:"2 hours",req:true},
+            {title:"NY compliance training",detail:"DOS rules, NYC-specific regulations, fair housing, rent stabilization.",time:"4 hours",req:true,diff:true}
+          ]}
+        ]
+      },
+      IL: {
+        license: "IL Managing Broker License (IDFPR) required for brokerage operations. 165 hours education + 2 years licensee experience.",
+        diffs: [
+          "IL uses 'Managing Broker' title (not just 'Broker') — different terminology than PA",
+          "IL requires 165 hours education (vs 60 in PA)",
+          "Chicago RLTO has specific requirements affecting property marketing and leasing partnerships",
+          "IL requires managing broker to directly supervise all sponsored licensees",
+          "Chicago has separate business license requirements for real estate offices",
+          "IL has unique 'consent to dual agency' form — different from PA disclosure"
+        ],
+        steps: [
+          {cat:"Verification & Compliance",items:[
+            {title:"Verify active IL Managing Broker License (IDFPR)",detail:"IDFPR online verification. IL uses 'Managing Broker' not 'Broker'.",time:"1 day",req:true,diff:true},
+            {title:"Verify IL brokerage entity registration",detail:"IDFPR registration. Chicago may require additional city business license.",time:"1 day",req:true,diff:true},
+            {title:"Verify E&O insurance",detail:"Errors & Omissions coverage.",time:"1 day",req:true},
+            {title:"Complete AML verification",detail:"FinCEN requirements for IL real estate transactions.",time:"1 day",req:true}
+          ]},
+          {cat:"Partnership Setup",items:[
+            {title:"Execute referral agreement (IL-specific)",detail:"Include Chicago RLTO provisions, dual agency consent requirements.",time:"1-2 days",req:true,diff:true},
+            {title:"Define territory and property type scope",detail:"Chicago metro, suburbs, property types, RLTO applicability.",time:"1 day",req:true},
+            {title:"Set up partner portal access",detail:"CRM access, listing data, lead sharing.",time:"2 hours",req:true},
+            {title:"Establish communication cadence",detail:"Weekly pipeline, monthly reviews, QBR.",time:"1 hour",req:true}
+          ]},
+          {cat:"Training & Alignment",items:[
+            {title:"Complete brand and messaging alignment",detail:"Chicago market materials, RLTO-compliant advertising.",time:"3 hours",req:true},
+            {title:"IL portfolio deep dive",detail:"Properties, Chicago RLTO status, property tax context (among highest in US).",time:"4 hours",req:true,diff:true},
+            {title:"Lead handoff process training",detail:"Qualification criteria, CRM process, SLA.",time:"2 hours",req:true},
+            {title:"IL compliance training",detail:"IDFPR rules, Chicago RLTO, dual agency consent, fair housing.",time:"3 hours",req:true,diff:true}
+          ]}
+        ]
+      }
+    }
+  }
+};
+
+// ============================================================
+// RENDER
+// ============================================================
+var checked = {};
+
+function generate() {
+  var role = document.getElementById('selRole').value;
+  var state = document.getElementById('selState').value;
+  var prop = document.getElementById('selProp').value;
+  if(!role||!state) return;
+
+  checked = {};
+  var rd = DATA[role];
+  var sd = rd.states[state];
+  if(!sd) { alert('Data not available for this combination.'); return; }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').classList.add('active');
+
+  var totalItems = 0, reqItems = 0, diffItems = 0;
+  var totalTime = "";
+  var weeks = 0;
+  sd.steps.forEach(function(sec) {
+    sec.items.forEach(function(item) {
+      totalItems++;
+      if(item.req) reqItems++;
+      if(item.diff) diffItems++;
+      var t = item.time || "";
+      if(t.indexOf("week")>-1) weeks += parseInt(t) || 1;
+    });
+  });
+
+  var stateNames = {PA:"Pennsylvania",FL:"Florida",TX:"Texas",CA:"California",NY:"New York",IL:"Illinois"};
+
+  document.getElementById('summaryCards').innerHTML =
+    '<div class="s-card"><div class="s-card-label">Role</div><div class="s-card-value" style="font-size:16px;color:#a5b4fc">'+rd.label+'</div></div>'+
+    '<div class="s-card"><div class="s-card-label">State</div><div class="s-card-value" style="font-size:16px;color:#f1f5f9">'+stateNames[state]+'</div></div>'+
+    '<div class="s-card"><div class="s-card-label">Total Steps</div><div class="s-card-value" style="color:#06b6d4">'+totalItems+'</div></div>'+
+    '<div class="s-card"><div class="s-card-label">Differences from PA</div><div class="s-card-value" style="color:'+(diffItems>0?'#f59e0b':'#22c55e')+'">'+diffItems+'</div></div>';
+
+  // Diff banner
+  if(sd.diffs && sd.diffs.length > 0) {
+    var diffHtml = '<div class="diff-banner"><div class="diff-banner-title">⚠ Key Differences from Pennsylvania (Baseline)</div>';
+    sd.diffs.forEach(function(d) { diffHtml += '<div class="diff-item">'+d+'</div>'; });
+    diffHtml += '</div>';
+    document.getElementById('diffBanner').innerHTML = diffHtml;
+  } else {
+    document.getElementById('diffBanner').innerHTML = state === 'PA' ?
+      '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:16px 20px;margin-bottom:24px;font-size:13px;color:#22c55e;font-weight:600">✓ This is your baseline state — no differences to flag.</div>' : '';
+  }
+
+  // Sections
+  var secHtml = '';
+  var globalIdx = 0;
+  sd.steps.forEach(function(sec, si) {
+    var catColors = {
+      "Licensing & Compliance":"#6366f1", "Registration & Compliance":"#6366f1", "Verification & Compliance":"#6366f1",
+      "Company Onboarding":"#06b6d4", "Partnership Setup":"#06b6d4",
+      "Training & Ramp-Up":"#22c55e", "Training & Alignment":"#22c55e",
+      "Safety & Standards":"#f59e0b"
+    };
+    var color = catColors[sec.cat] || "#6366f1";
+
+    secHtml += '<div class="section"><div class="section-header"><div class="section-title">'+sec.cat+'</div>'+
+      '<div class="section-badge" style="background:'+color+'18;color:'+color+';border:1px solid '+color+'33">'+sec.items.length+' steps</div></div><ul class="checklist">';
+
+    sec.items.forEach(function(item) {
+      var idx = globalIdx++;
+      var tags = '';
+      if(item.time) tags += '<span class="check-tag tag-time">⏱ '+item.time+'</span>';
+      if(item.req) tags += '<span class="check-tag tag-required">Required</span>';
+      if(item.rec) tags += '<span class="check-tag tag-recommended">Recommended</span>';
+      if(item.diff) tags += '<span class="check-tag tag-diff">Different from PA</span>';
+
+      secHtml += '<li><div class="check-box" id="cb'+idx+'" onclick="toggleCheck('+idx+','+totalItems+')"></div>'+
+        '<div class="check-content"><div class="check-title">'+item.title+'</div>'+
+        '<div class="check-detail">'+item.detail+'</div>'+
+        '<div class="check-meta">'+tags+'</div></div></li>';
+    });
+
+    secHtml += '</ul></div>';
+  });
+
+  document.getElementById('sections').innerHTML = secHtml;
+
+  // License info
+  var licHtml = '<div class="section" style="background:rgba(99,102,241,0.04);border-color:rgba(99,102,241,0.15)">'+
+    '<div class="section-title" style="color:#a5b4fc;font-size:14px;margin-bottom:6px">Licensing Overview</div>'+
+    '<div style="font-size:13px;color:#cbd5e1;line-height:1.7">'+sd.license+'</div></div>';
+  document.getElementById('sections').innerHTML = licHtml + document.getElementById('sections').innerHTML;
+
+  updateProgress(totalItems);
+}
+
+function toggleCheck(idx, total) {
+  var el = document.getElementById('cb'+idx);
+  if(checked[idx]) { delete checked[idx]; el.classList.remove('checked'); }
+  else { checked[idx] = true; el.classList.add('checked'); }
+  updateProgress(total);
+}
+
+function updateProgress(total) {
+  var done = Object.keys(checked).length;
+  var pct = total > 0 ? Math.round((done/total)*100) : 0;
+  document.getElementById('progLabel').textContent = done+' of '+total+' complete';
+  document.getElementById('progPct').textContent = pct+'%';
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+document.getElementById('genBtn').addEventListener('click', generate);
+</script>
+</body>
+</html>
